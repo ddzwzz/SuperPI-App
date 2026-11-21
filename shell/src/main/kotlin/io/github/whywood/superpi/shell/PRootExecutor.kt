@@ -25,6 +25,8 @@ class PRootExecutor(
     private val pidReader: (File) -> Long = ::readPidFile,
     private val logDir: File = File(tempDir, "tool-output"),
 ) : LinuxExecutor {
+    val shmDir: File get() = File(tempDir, "shm")
+
     init {
         require(maxOutputBytes > 0) { "maxOutputBytes must be positive" }
     }
@@ -84,6 +86,8 @@ class PRootExecutor(
         add("/proc")
         add("-b")
         add("/sys")
+        add("-b")
+        add("${shmDir.absolutePath}:/dev/shm")
         if (sharedStorageEnabled()) {
             add("-b")
             add("/storage/emulated/0:/storage/emulated/0")
@@ -116,7 +120,8 @@ class PRootExecutor(
         require(rootfsDir.isDirectory) { "rootfs not installed: $rootfsDir" }
         workspaceDir.mkdirs()
         tempDir.mkdirs()
-        prepareBindDirectories(rootfsDir, extraBinds() + (workspaceDir to workspaceDir.absolutePath))
+        shmDir.mkdirs()
+        prepareBindDirectories(rootfsDir, extraBinds() + (workspaceDir to workspaceDir.absolutePath) + (shmDir to "/dev/shm"))
         if (sharedStorageEnabled()) {
             File(rootfsDir, "storage/emulated/0").mkdirs()
             File(rootfsDir, "sdcard").mkdirs()

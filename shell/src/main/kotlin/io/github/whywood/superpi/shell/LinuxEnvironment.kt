@@ -123,7 +123,7 @@ class LinuxEnvironment(
                 ?.filter { it.isNotBlank() }
                 .orEmpty()
         }.getOrDefault(emptyList())
-        val resolved = servers.ifEmpty { listOf("8.8.8.8", "8.8.4.4") }
+        val resolved = (servers + listOf("223.5.5.5", "1.1.1.1", "8.8.8.8")).distinct().take(3)
         return resolved.joinToString(separator = "\n", postfix = "\n") { "nameserver $it" }
     }
 

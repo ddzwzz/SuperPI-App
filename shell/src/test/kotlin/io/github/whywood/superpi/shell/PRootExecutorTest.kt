@@ -32,6 +32,19 @@ class PRootExecutorTest {
     }
 
     @Test
+    fun devShmBoundToSandbox() = runBlocking {
+        val fixture = fixture()
+
+        val command = fixture.executor.buildCommand("echo hi")
+
+        assertTrue(command.contains("${fixture.tempDir.absolutePath}/shm:/dev/shm"))
+        val result = fixture.executor.execute("echo hi")
+        assertEquals(0, result.exitCode)
+        assertTrue(File(fixture.rootfs, "dev/shm").isDirectory)
+        assertTrue(File(fixture.tempDir, "shm").isDirectory)
+    }
+
+    @Test
     fun sharedStorageDisabledOmitsBindMounts() {
         val command = fixture().executor.buildCommand("echo hi")
 
@@ -280,12 +293,13 @@ class PRootExecutorTest {
                 pidReader = pidReader,
             )
         }
-        return Fixture(rootfs, workspace, executor)
+        return Fixture(rootfs, workspace, executor, tempDir)
     }
 
     private data class Fixture(
         val rootfs: File,
         val workspace: File,
         val executor: PRootExecutor,
+        val tempDir: File,
     )
 }
